@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Без Жалости!</title>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    body {
+        background: #000;
+        color: #fff;
+        font-family: 'Arial', sans-serif;
+        text-align: center;
+        overflow: hidden;
+        height: 100vh;
+    }
+    .container {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        padding: 20px;
+    }
+    .logo img {
+        width: 220px;
+        max-width: 80%;
+        animation: fadeIn 2s ease-in-out;
+    }
+    h1 {
+        font-size: 3rem;
+        color: #ff0000;
+        text-shadow: 0 0 20px #ff0000;
+        animation: flicker 2s infinite;
+        margin-top: 20px;
+    }
+    .btn {
+        margin-top: 30px;
+        display: inline-block;
+        padding: 15px 35px;
+        font-size: 1.4rem;
+        background: #ff0000;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 8px;
+        box-shadow: 0 0 20px #ff0000;
+        transition: 0.3s;
+    }
+    .btn:hover {
+        background: #fff;
+        color: #ff0000;
+        box-shadow: 0 0 40px #ff0000;
+        animation: vibrate 0.3s linear infinite;
+    }
+    @keyframes vibrate {
+        0% { transform: translate(0); }
+        20% { transform: translate(-2px, 2px); }
+        40% { transform: translate(-2px, -2px); }
+        60% { transform: translate(2px, 2px); }
+        80% { transform: translate(2px, -2px); }
+        100% { transform: translate(0); }
+    }
+    @keyframes flicker {
+        0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {opacity: 1;}
+        20%, 24%, 55% {opacity: 0.6;}
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.9);}
+        to { opacity: 1; transform: scale(1);}
+    }
+
+    /* Canvas */
+    canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Адаптив */
+    @media (max-width: 768px) {
+        h1 { font-size: 2.2rem; }
+        .btn { font-size: 1.1rem; padding: 12px 25px; }
+        .logo img { width: 180px; }
+    }
+    @media (max-width: 480px) {
+        h1 { font-size: 1.8rem; }
+        .btn { font-size: 1rem; padding: 10px 20px; }
+        .logo img { width: 150px; }
+    }
+</style>
+</head>
+<body>
+    <canvas id="fireCanvas"></canvas>
+    <div class="container">
+        <div class="logo">
+            <img src="IMG_6498.PNG" alt="Без Жалости!">
+        </div>
+        <h1>Без Жалости!</h1>
+        <a class="btn" id="fireButton" href="https://t.me/bezjal" target="_blank">🔥 Войти в треш 🔥</a>
+    </div>
+
+<audio id="clickSound" src="https://www.myinstants.com/media/sounds/minecraft_click.mp3" preload="auto"></audio>
+
+<script>
+    const canvas = document.getElementById('fireCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Particle {
+        constructor(x, y, color, type) {
+            this.x = x;
+            this.y = y;
+            this.radius = Math.random() * (type === 'spark' ? 2 : 5) + 1;
+            this.color = color;
+            this.speedX = (Math.random() - 0.5) * 2;
+            this.speedY = -Math.random() * 3 - 2;
+            this.alpha = 1;
+            this.type = type; // fire, smoke, spark
+        }
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            this.alpha -= 0.02;
+        }
+        draw() {
+            ctx.save();
+            ctx.globalAlpha = this.alpha;
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    function createParticles() {
+        const baseX = canvas.width / 2 + (Math.random() - 0.5) * 200;
+        const y = canvas.height - 20;
+
+        const fireColors = ['#ff4500', '#ff0000', '#ff6347', '#ffa500'];
+        const smokeColor = 'rgba(100,100,100,0.3)';
+        const sparkColor = '#ffff66';
+
+        // Fire particles
+        for (let i = 0; i < 3; i++) {
+            particles.push(new Particle(baseX, y, fireColors[Math.floor(Math.random() * fireColors.length)], 'fire'));
+        }
+        // Smoke particles
+        particles.push(new Particle(baseX, y, smokeColor, 'smoke'));
+        // Spark particles
+        if (Math.random() > 0.8) {
+            particles.push(new Particle(baseX, y, sparkColor, 'spark'));
+        }
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        particles.forEach((particle, index) => {
+            particle.update();
+            particle.draw();
+            if (particle.alpha <= 0) {
+                particles.splice(index, 1);
+            }
+        });
+
+        createParticles();
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+    // Звук при клике
+    document.getElementById('fireButton').addEventListener('click', () => {
+        document.getElementById('clickSound').play();
+    });
+</script>
+</body>
+</html>
